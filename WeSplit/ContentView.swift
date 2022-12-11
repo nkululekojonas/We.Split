@@ -11,20 +11,21 @@ struct ContentView: View {
     @State private var checkAmount = 0.0
     @State private var tipPercentage = 0
     @State private var numberOfPeople = 0
+    
     @FocusState private var amountIsFocus: Bool
     
-    private let tipPercentages: [Int] = [0, 10, 15, 20, 25]
-    private let name = ["Jonas", "James"]
+    private let tipPercentages = [1..<101]
+    private var userLocation = Locale.current.currency?.identifier ?? "USD"
+    
+    private var checkTotal: Double {
+        checkAmount + (checkAmount / 100 * Double(tipPercentage))
+    }
+    
     private var totalPerPerson: Double {
         let peopleCount = Double(numberOfPeople + 2)
-        let tipSelection = Double(tipPercentage)
+        let tipValue = (checkAmount / 100) * Double(tipPercentage)
 
-        let tipValue = checkAmount / 100 * tipSelection
-        let grandTotal = checkAmount + tipValue
-        let amountPerPerson = grandTotal / peopleCount
-
-        return amountPerPerson
-
+        return (checkAmount + tipValue) / peopleCount
     }
     
     var body: some View {
@@ -44,17 +45,26 @@ struct ContentView: View {
                 
                 Section {
                     Picker("Tip percentage", selection: $tipPercentage) {
-                        ForEach(tipPercentages, id: \.self) {
+                        ForEach(0..<101, id: \.self) {
                             Text($0, format: .percent)
                         }
-                    }.pickerStyle(.segmented)
+                    }.pickerStyle(.wheel)
                 } header: {
                     Text("How much would you like to tip:")
                 }
                 
                 Section {
-                    Text(totalPerPerson, format: .currency(code: Locale.current.currency?.identifier ?? "AUD"))
+                    Text(totalPerPerson, format: .currency(code: userLocation))
+                } footer: {
+                    Text("Amount per person")
                 }
+                
+                Section {
+                    Text(checkTotal, format: .currency(code: userLocation))
+                } footer: {
+                    Text("Total including tip.")
+                }
+
             }
             .navigationTitle("We.Split")
             .toolbar {
